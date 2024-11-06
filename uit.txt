@@ -1,0 +1,623 @@
+xml
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import org.w3c.dom.*;
+import java.util.Scanner;
+
+public class xml {
+
+    private static final String FILE_PATH = "C:\\Users\\annamalaiindira\\OneDrive\\Desktop\\uit\\xml_parser.xml";
+
+    public static void main(String[] args) {
+        try (Scanner sc = new Scanner(System.in)) {  // Auto-close Scanner
+            System.out.println("Enter user ID:");
+            String userId = sc.nextLine().trim();
+            
+            if (userId.isEmpty()) {
+                System.out.println("User ID cannot be empty.");
+                return;
+            }
+
+            String userDetails = getUserDetails(userId);
+            if (userDetails != null) {
+                System.out.println("User Details:\n" + userDetails);
+            } else {
+                System.out.println("User with ID " + userId + " not found.");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static String getUserDetails(String userId) throws Exception {
+        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        DocumentBuilder builder = factory.newDocumentBuilder();
+        Document document = builder.parse(FILE_PATH);
+        
+        document.getDocumentElement().normalize();
+
+        NodeList nodeList = document.getElementsByTagName("user");
+        for (int i = 0; i < nodeList.getLength(); i++) {
+            Node node = nodeList.item(i);
+            if (node.getNodeType() == Node.ELEMENT_NODE) {
+                Element userElement = (Element) node;
+                String id = userElement.getAttribute("id");
+
+                if (id.equals(userId)) {
+                    StringBuilder userDetails = new StringBuilder();
+                    userDetails.append("ID: ").append(id);
+                    userDetails.append("\nName: ").append(getTagValue("name", userElement));
+                    userDetails.append("\nEmail: ").append(getTagValue("email", userElement));
+                    userDetails.append("\nPhone: ").append(getTagValue("phone", userElement));
+                    return userDetails.toString();
+                }
+            }
+        }
+        return null;
+    }
+
+    private static String getTagValue(String tag, Element element) {
+        NodeList nodeList = element.getElementsByTagName(tag);
+        if (nodeList.getLength() > 0) {
+            Node node = nodeList.item(0);
+            return node != null ? node.getTextContent() : "N/A";
+        }
+        return "N/A";
+    }
+}
+
+
+xml file
+
+<?xml version="1.0" encoding="UTF-8"?>
+<users>
+    <user id="001">
+        <name>John Doe</name>
+        <email>johndoe@example.com</email>
+        <phone>123-456-7890</phone>
+    </user>
+    <user id="002">
+        <name>Jane Smith</name>
+        <email>janesmith@example.com</email>
+        <phone>987-654-3210</phone>
+    </user>
+    <user id="003">
+        <name>Mike Johnson</name>
+        <email>mikejohnson@example.com</email>
+        <phone>555-123-4567</phone>
+    </user>
+</users>
+
+
+htpp
+
+import java.io.*;
+import java.net.*;
+public class http {
+    public static void main(String[] args) {
+        String hostname = "www.google.com";
+        int port = 80;
+        try(Socket s = new Socket(hostname,port))
+        {
+            PrintWriter out = new PrintWriter(s.getOutputStream(),true);
+            BufferedReader in = new BufferedReader(new InputStreamReader(s.getInputStream()));
+
+            out.println("GET / HTTP/1.0");
+            out.println("Host: "+hostname);
+            out.println("User-Agent: JavaSocket/1.0");
+            out.println();
+            String line;
+            while ((line= in.readLine())!=null) {
+                System.out.println(line);
+            }
+        }
+        catch(Exception e)
+        {
+            System.out.println(e);
+        }
+    }
+}
+
+
+smtp
+
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.net.Socket;
+import javax.net.ssl.SSLSocket;
+import javax.net.ssl.SSLSocketFactory;
+
+public class SimpleSmtpClient {
+    public static void main(String[] args) {
+        String smtpServer = "smtp.gmail.com";
+        int port = 587;
+        String username = "2022cs0179@svce.ac.in";
+        String password = "Idhika@22";
+        String senderEmail = "20222cs0179@svce.ac.in";
+        String recipientEmail = "2022cs0179@svce.ac.in";
+        String subject = "Test Email";
+        String message = "Hello, this is a test email sent using Java!";
+
+        try (Socket socket = new Socket(smtpServer, port);
+             BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+             OutputStream writer = socket.getOutputStream()) {
+
+            // Initial server response
+            System.out.println(reader.readLine());
+
+            // EHLO command
+            sendCommand(writer, "EHLO " + smtpServer);
+            readMultiLine(reader);
+
+            // STARTTLS command to switch to a secure connection
+            sendCommand(writer, "STARTTLS");
+            System.out.println(reader.readLine());
+
+            // Upgrade to SSL/TLS socket
+            SSLSocketFactory sslSocketFactory = (SSLSocketFactory) SSLSocketFactory.getDefault();
+            SSLSocket sslSocket = (SSLSocket) sslSocketFactory.createSocket(socket, smtpServer, port, true);
+            sslSocket.startHandshake();
+
+            BufferedReader sslReader = new BufferedReader(new InputStreamReader(sslSocket.getInputStream()));
+            OutputStream sslWriter = sslSocket.getOutputStream();
+
+            // Authenticate
+            sendCommand(sslWriter, "AUTH LOGIN");
+            sslReader.readLine();
+            sendCommand(sslWriter, java.util.Base64.getEncoder().encodeToString(username.getBytes()));
+            sslReader.readLine();
+            sendCommand(sslWriter, java.util.Base64.getEncoder().encodeToString(password.getBytes()));
+            sslReader.readLine();
+
+            // Send email details
+            sendCommand(sslWriter, "MAIL FROM:<" + senderEmail + ">");
+            sslReader.readLine();
+            sendCommand(sslWriter, "RCPT TO:<" + recipientEmail + ">");
+            sslReader.readLine();
+            sendCommand(sslWriter, "DATA");
+            sslReader.readLine();
+
+            // Send subject, headers, and body
+            sslWriter.write(("Subject: " + subject + "\r\n").getBytes());
+            sslWriter.write(("From: " + senderEmail + "\r\n").getBytes());
+            sslWriter.write(("To: " + recipientEmail + "\r\n").getBytes());
+            sslWriter.write(("\r\n" + message + "\r\n.\r\n").getBytes());
+            sslWriter.flush();
+            sslReader.readLine();
+
+            // End session
+            sendCommand(sslWriter, "QUIT");
+            sslReader.readLine();
+
+            sslSocket.close();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static void sendCommand(OutputStream writer, String command) throws Exception {
+        writer.write((command + "\r\n").getBytes());
+        writer.flush();
+    }
+
+    private static void readMultiLine(BufferedReader reader) throws Exception {
+        String line;
+        while ((line = reader.readLine()) != null) {
+            System.out.println(line);
+            if (line.startsWith("250 ") || line.startsWith("220 ")) break;
+        }
+    }
+}
+
+
+pop3
+
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import javax.net.ssl.SSLSocket;
+import javax.net.ssl.SSLSocketFactory;
+
+public class pop3 {
+    public static void main(String args[]) {
+        String pop3server = "pop.gmail.com";
+        int port = 995;
+        String username = "2022cs0179@svce.ac.in"; // Use your email
+        String password = "Idhika@22"; // Use your app password
+
+        try {
+            // Create an SSL socket to connect to the POP3 server
+            SSLSocketFactory factory = (SSLSocketFactory) SSLSocketFactory.getDefault();
+            SSLSocket socket = (SSLSocket) factory.createSocket(pop3server, port);
+            BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            OutputStream writer = socket.getOutputStream();
+
+            // Read server greeting
+            System.out.println(reader.readLine());
+
+            // Send USER command
+            sendCommand(writer, "USER " + username);
+            System.out.println(reader.readLine());
+
+            // Send PASS command
+            sendCommand(writer, "PASS " + password);
+            System.out.println(reader.readLine());
+
+            // Send STAT command
+            sendCommand(writer, "STAT");
+            System.out.println(reader.readLine());
+
+            // Send LIST command
+            sendCommand(writer, "LIST");
+            readMultiLine(reader); // Read multiple lines for LIST response
+             
+           
+
+            // Send QUIT command
+            sendCommand(writer, "QUIT");
+            System.out.println(reader.readLine());
+
+            // Close the socket
+            socket.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static void sendCommand(OutputStream writer, String command) throws Exception {
+        writer.write((command + "\r\n").getBytes());
+        writer.flush();
+    }
+
+    private static void readMultiLine(BufferedReader reader) throws Exception {
+        String line;
+        while ((line = reader.readLine()) != null) {
+            System.out.println(line);
+            if (line.startsWith(".")) break; // End of LIST response
+        }
+    }
+}
+
+
+webscraping
+
+import requests
+from bs4 import BeautifulSoup
+import pandas as pd
+
+currentpage=1
+data=[]
+proceed=True
+
+while proceed:
+    print(f"Currently scraping page : {currentpage}")
+    url=f"https://books.toscrape.com/catalogue/page-{currentpage}.html"
+
+    proxies=""
+    try:
+        page=requests.get(url,proxies=proxies,timeout=10)
+        page.raise_for_status()
+    except requests.exceptions.RequestException as e:
+        print(f"Request failed : {e}")
+        proceed=False
+        break
+    soup=BeautifulSoup(page.text,"html.parser")
+
+    if soup.title.text=="404 Not Found":
+        proceed=False
+        break
+    else:
+        all_books=soup.find_all("li",class_="col-xs-6 col-sm-4 col-md-3 col-lg-3")
+
+    for j in all_books:
+        item={}
+        item["Title"]=j.find("img").attrs["alt"]
+        item["Link"]="https://books.toscrape.com/catalogue/"+j.find("a").attrs["href"]
+        item["Price"]=j.find("p",class_="price_color").text[2:]
+        item["Stock"]=j.find("p",class_="instock availability").text.strip().split("\n")[0]
+
+        if item["Title"] and item["Link"] and item["Price"] and item["Stock"]:
+            data.append(item)
+            print(data,'\n')
+    currentpage+=1
+    break;
+
+# df=pd.DataFrame(data)
+# df.to_excel("books.xlsx",index=False)
+# df.to_csv("books.csv",index=False)
+
+# print(f"Scraping complete. Data saved to books.xlsx and books.csv")
+
+chat
+server
+
+import java.io.*;
+import java.net.*;
+public class Udp1Server{
+    public static void main(String args[]){
+        try {
+            String msg;
+            byte[] buf=new byte[1024];
+            DatagramSocket s=new DatagramSocket(4700);
+            InetAddress ia=InetAddress.getByName("127.0.0.1");
+            BufferedReader b=new BufferedReader(new InputStreamReader(System.in));
+            DatagramPacket receiver=new DatagramPacket(buf,buf.length);
+            do { 
+                s.receive(receiver);
+                msg=new String(receiver.getData(),0,receiver.getLength());
+                if(msg.equals("stop")){break;}
+                System.out.println("message from client:"+msg);
+                System.out.println("enter message to client:");
+               
+                msg=b.readLine();
+                buf=msg.getBytes();
+                DatagramPacket sender=new DatagramPacket(buf,buf.length,ia,4600);
+                s.send(sender);
+            } while (!msg.equals("stop"));
+            s.close();
+
+        } catch (Exception e) {
+            System.out.println(e);
+        }
+    }
+}
+
+client
+
+import java.io.*;
+import java.net.*;
+
+public class Udp1Client{
+    public static void main(String args[]){
+        try {
+           DatagramSocket s=new DatagramSocket(4600);
+           String msg;
+           byte[]  buf=new byte[1024];
+           InetAddress ia=InetAddress.getByName("127.0.0.1");
+           BufferedReader br=new BufferedReader(new InputStreamReader(System.in));
+           DatagramPacket receiver=new DatagramPacket(buf,buf.length);
+           do { 
+            System.out.println("enter message to server:");
+            msg=br.readLine();
+            buf=msg.getBytes();
+            DatagramPacket sender=new DatagramPacket(buf,buf.length,ia,4700);
+            s.send(sender);
+            if(msg.equals("stop")){break;}
+            s.receive(receiver);
+            msg=new String(receiver.getData(),0,receiver.getLength());
+            System.out.println("message from server:"+msg);
+           
+
+           } while (!msg.equals("stop"));
+           s.close();
+        } catch (Exception e) {
+            System.out.println(e);
+        }
+    }
+}
+
+file server
+
+import java.io.*; 
+import java.net.*; 
+
+public class Server1 { 
+    public static void main(String[] args) { 
+        try (ServerSocket serverSocket = new ServerSocket(8080)) { 
+            System.out.println("Server started. Waiting for client...");
+
+            Socket socket = serverSocket.accept(); 
+            System.out.println("Client connected."); 
+
+            File file = new File("k.txt"); 
+            try (FileInputStream fileInputStream = new FileInputStream(file);
+                 OutputStream outputStream = socket.getOutputStream()) {
+
+                byte[] buffer = new byte[1024]; 
+                int bytesRead; 
+                while ((bytesRead = fileInputStream.read(buffer)) != -1) { 
+                    outputStream.write(buffer, 0, bytesRead); 
+                }
+                System.out.println("File transfer complete.");
+            }
+
+            socket.close();
+        } catch (IOException e) {
+            System.err.println("Server error: " + e.getMessage());
+        }
+    } 
+} 
+
+
+file client
+
+import java.io.*; 
+import java.net.*; 
+
+public class Client1 { 
+    public static void main(String[] args) { 
+        try (Socket socket = new Socket("localhost", 8080)) { 
+            System.out.println("Connected to server.");
+
+            try (InputStream inputStream = socket.getInputStream();
+                 FileOutputStream fileOutputStream = new FileOutputStream("p.txt")) {
+
+                byte[] buffer = new byte[1024]; 
+                int bytesRead; 
+                while ((bytesRead = inputStream.read(buffer)) != -1) { 
+                    fileOutputStream.write(buffer, 0, bytesRead); 
+                }
+                System.out.println("File transfer successful.");
+            }
+
+        } catch (IOException e) {
+            System.err.println("Client error: " + e.getMessage());
+        }
+    } 
+} 
+
+
+form js
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Registration Form</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #e0f7fa; /* Light blue background */
+            font-family: Arial, sans-serif;
+        }
+
+        .registration-form {
+            background-color: #ffffff; /* White background for form */
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            width: 300px;
+        }
+
+        .registration-form h2 {
+            text-align: center;
+            color: #00796b; /* Dark teal color */
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            font-weight: bold;
+            color: #00796b;
+        }
+
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #b2dfdb;
+            border-radius: 4px;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 10px;
+            background-color: #00796b;
+            color: #ffffff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .submit-btn:hover {
+            background-color: #004d40;
+        }
+
+        .error {
+            color: red;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+
+<div class="registration-form">
+    <h2>Student Registration</h2>
+    <form id="studentForm" onsubmit="return validateForm()">
+        <div class="form-group">
+            <label for="name">Name:</label>
+            <input type="text" id="name" name="name" placeholder="Enter your name">
+            <span class="error" id="nameError"></span>
+        </div>
+        <div class="form-group">
+            <label for="email">Email:</label>
+            <input type="email" id="email" name="email" placeholder="Enter your email">
+            <span class="error" id="emailError"></span>
+        </div>
+        <div class="form-group">
+            <label for="age">Age:</label>
+            <input type="number" id="age" name="age" placeholder="Enter your age">
+            <span class="error" id="ageError"></span>
+        </div>
+        <div class="form-group">
+            <label for="course">Course:</label>
+            <select id="course" name="course">
+                <option value="">Select a course</option>
+                <option value="Computer Science">Computer Science</option>
+                <option value="Mathematics">Mathematics</option>
+                <option value="Physics">Physics</option>
+                <option value="Chemistry">Chemistry</option>
+            </select>
+            <span class="error" id="courseError"></span>
+        </div>
+        <button type="submit" class="submit-btn">Register</button>
+    </form>
+</div>
+
+<script>
+    function validateForm() {
+        document.getElementById('nameError').textContent = '';
+        document.getElementById('emailError').textContent = '';
+        document.getElementById('ageError').textContent = '';
+        document.getElementById('courseError').textContent = '';
+
+        const name = document.getElementById('name').value.trim();
+        const email = document.getElementById('email').value.trim();
+        const age = document.getElementById('age').value.trim();
+        const course = document.getElementById('course').value;
+
+        let valid = true;
+
+        if (name === '') {
+            document.getElementById('nameError').textContent = 'Name is required';
+            valid = false;
+        }
+
+        const emailPattern = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
+        if (email === '') {
+            document.getElementById('emailError').textContent = 'Email is required';
+            valid = false;
+        } else if (!emailPattern.test(email)) {
+            document.getElementById('emailError').textContent = 'Invalid email format';
+            valid = false;
+        }
+
+        if (age === '') {
+            document.getElementById('ageError').textContent = 'Age is required';
+            valid = false;
+        } else if (isNaN(age) || age < 18 || age > 60) {
+            document.getElementById('ageError').textContent = 'Age must be between 18 and 60';
+            valid = false;
+        }
+
+        if (course === '') {
+            document.getElementById('courseError').textContent = 'Please select a course';
+            valid = false;
+        }
+
+        if (valid) {
+            alert('Registered');
+            return true;
+        } else {
+            return false;
+        }
+    }
+</script>
+
+</body>
+</html>
+
+
+
+

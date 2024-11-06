@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<users>
+    <user id="1">
+        <name>Cow</name>
+        <phno>8925</phno>
+        <color>Blue</color>
+    </user>
+    <user>
+        <name>Dog</name>
+        <phno>8925</phno>
+        <color>Blue</color>
+    </user>
+    <user>
+        <name>Cat</name>
+        <phno>8925</phno>
+        <color>Blue</color>
+    </user>
+    <user>
+        <name>Bat</name>
+        <phno>8925</phno>
+        <color>Blue</color>
+    </user>
+</users>
